@@ -8,12 +8,21 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
-
-
+#Clear global enviornment
+```{r}
+rm(list = ls())
+```
 #load data
 ```{r}
-library(tidyverse)
-library(viridis)
-source("data_wrangle/function_wrangling.R")
+source("01_processing/loadfile.R")
 ```
-
+```{r}
+rawcq <- loadfile("E:/Files/PhD Files 2 Iris Mollhoff/","20210915_Tomato-Pst-A14_10hr_actin_acet1")
+```
+#clean data
+```{r}
+source("01_processing/cleandata.R")
+```
+```{r}
+df <- cleandata(rawcq)
+```
