@@ -1,0 +1,19 @@
+---
+title: "bio258_project_INM"
+author: "Iris Mollhoff"
+date: "2023-12-06"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+#load data
+```{r}
+library(tidyverse)
+library(viridis)
+source("data_wrangle/function_wrangling.R")
+```
+
