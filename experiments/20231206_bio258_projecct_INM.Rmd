@@ -12,17 +12,45 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 rm(list = ls())
 ```
+
 #load data
 ```{r}
 source("01_processing/loadfile.R")
+
+rawcq <- loadfile("E:/Files/PhD Files 2 Iris Mollhoff/Git stuff/qPCR_analysis/data/","20210915_Tomato-Pst-A14_10hr_actin_acet1")
 ```
-```{r}
-rawcq <- loadfile("E:/Files/PhD Files 2 Iris Mollhoff/","20210915_Tomato-Pst-A14_10hr_actin_acet1")
-```
-#clean data
+
+#Process data
+##clean data
 ```{r}
 source("01_processing/cleandata.R")
-```
-```{r}
+
 df <- cleandata(rawcq)
 ```
+##calculate techrep
+```{r}
+source("01_processing/calctecrep.R")
+
+df1 <- calctecrep(df)
+```
+##pull actin (housekeeping gene)
+```{r}
+source("01_processing/pullhkg.R")
+
+df_hkg <- pullhkg(df1, "SlActin")
+```
+##calculate delta Ct
+```{r}
+source("01_processing/deltact.R")
+
+df2 <- deltact(df1,df_hkg, "SlAcet1")
+```
+
+#Data analysis
+#Statistics
+```{r}
+source("02_analysis/anova2x.R")
+
+ra <- anova2x(df2)
+```
+
