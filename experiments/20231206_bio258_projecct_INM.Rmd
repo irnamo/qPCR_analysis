@@ -51,6 +51,6 @@ df2 <- deltact(df1,df_hkg, "SlAcet1")
 ```{r}
 source("02_analysis/anova2x.R")
 
-ra <- anova2x(df2)
+anova_treatment <- anova2x(df2)
 ```
 
