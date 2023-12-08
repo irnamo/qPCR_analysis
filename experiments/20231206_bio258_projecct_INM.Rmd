@@ -54,3 +54,30 @@ source("02_analysis/anova2x.R")
 anova_treatment <- anova2x(df2)
 ```
 
+#generate figure
+#figure
+```{r}
+source("03_figures/figure.R")
+
+fig1a <- figure(df2,"Sl Acet1a/b (6hpi)")
+```
+```{r}
+#source("03_figures/savefig.R")
+#folder<-"E:/Files/PhD Files 2 Iris Mollhoff/Git stuff/qPCR_analysis/experiments/"
+#filename<-"20231207_a14_acet1_6h_anovabonf"
+#fig1a <- figure(fig1a,folder,filename)
+
+#RETURNS: Error in figure(fig1a, folder, filename) : unused argument (filename)
+```
+```{r}
+folder_location<-"E:/Files/PhD Files 2 Iris Mollhoff/Git stuff/qPCR_analysis/experiments/"
+file_name<-"20231207_a14_acet1_6h_anovabonf"
+path <-paste(folder_location,file_name,".png",sep = "")
+  
+  ggsave(filename = path,
+         device = "png",
+         height = 4, width = 5)
+  path
+```
+
+

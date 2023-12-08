@@ -1,0 +1,51 @@
+Folder PATH listing for volume 2StanfordIM
+Volume serial number is 64A5-F009
+E:.
+|   LICENSE
+|   README.md
+|   .gitignore
+|   tree.txt
+|
++---data
+|       README.md
+|       20210701_Tomato-Pst-A14_6hr_270_aco2.xlsx
+|       20210625_Tomato-Pst-A14_6hr_actin_pti5.xlsx
+|       20210915_Tomato-Pst-A14_10hr_actin_acet1.xlsx
+|       20210915_Tomato-Pst-A14_10hr_250_270.xlsx
+|
++---experiments
+|   |   README.md
+|   |   20231206_bio258_projecct_INM.Rmd
+|   |   20231207_a14_acet1_6h_anovabonf.png
+|   |
+|   +---02_analysis
+|   |       README.md
+|   |       anova2x.R
+|   |
+|   +---03_figures
+|   |       README.md
+|   |       figure.R
+|   |       savefig.R
+|   |
+|   \---01_processing
+|           README.md
+|           loadfile.R
+|           cleandata.R
+|           calctecrep.R
+|           pullhkg.R
+|           deltact.R
+|
++---miscellaneous
+|   |   README.md
+|   |
+|   +---materials
+|   |       README.md
+|   |
+|   +---protocols
+|   |       README.md
+|   |
+|   \---software_information
+|           README.md
+|
+\---tests
+        README.md
