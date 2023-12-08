@@ -1,11 +1,12 @@
 # qPCR analysis 
 
 ## Overview
-This is a repository for qPCR data from Iris Mollhoff's thesis research
+This is a repository for qPCR data from Iris Mollhoff's thesis research. qPCR is used to measure the abundance of mRNA in a sample. I run a lot of these experiments and end up with multiple spreadsheets worth of raw data that I need to process. The data analysis is time-consuming because I change the primers that I use in every qPCR. I used to copy and paste my code in r-markdown chunks and it was a huge pain. The main pain is having to find where in the code I need to replace primer names that I use. 
+
+I generated a new markdown file that calls functions through source() and is modifiable for multiple raw data inputs. I can easily call the primer name in the raw data and modify the title of the output image.
 
 ## Layout
-
-The repository is split into seven main directories, many of which have subdirectories. This structure has been designed to be easily navigable by humans and computers alike, allowing for rapid location of specific files and instructions. Within each directory is a `README.md` file which summarizes the purpose of that directory as well as some examples where necessary. This structure may not be perfect for your intended us and may need to be modified. Each section is briefly described below. 
+The repository is split into 4 main directories. Each section is briefly described below. 
 
 ### **`experiments`** 
 Where all of the experimental information lives, including any *executed* code. lives. This includes pipelines, scripts, and figure files. 
@@ -14,7 +15,7 @@ Where all of the experimental information lives, including any *executed* code. 
  * **`03_figures`**: Any code used to generate figures for your finished work, presentations, or for any other use.
 
 ### **`data`** 
-All raw data collected from experiments
+All data collected from experiments. The current version (12/7/2023) does not contain the raw data. The data I processed was the easiest to access at this time.
 
 ### **`miscellaneous`** (unfinished folder)
 Files that may not be code, but are important for reproducibility of your findings.
@@ -34,6 +35,11 @@ All test suites for your code. *Any custom code you've written should be thoroug
 3. **`.gitignore`**: A file that dictates which file-types and folders are not uploaded to the github repository.
 
 4. **`tree.txt`**: A text file that shows the folder structure.
+
+## Data management plan
+All code (R) will be stored on github. For the current repository (12/7/2023) I have not yet decided which repository to use to store the raw data files or whether to store the raw figures in github or a cloud repository. The data uploaded will include .xls or .csv files and potentially .png files if I decide to include files
+
+
 
 # License Information
 
