@@ -1,0 +1,90 @@
+---
+title: "bio258_project_INM"
+author: "Iris Mollhoff"
+date: "2023-12-06"
+output: html_document
+---
+
+# **Report** -- 2023.12.08
+optimized code for processing, analyzing, and generating figures for a14 qPCR data from 96-well plate quant-studio-2 instrument.
+
+# **R Code**
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## Clear global enviornment
+```{r}
+rm(list = ls())
+```
+
+## load data
+```{r}
+source("01_processing/loadfile.R")
+
+rawcq <- loadfile("E:/Files/PhD Files 2 Iris Mollhoff/Git stuff/qPCR_analysis/data/","20210915_Tomato-Pst-A14_10hr_actin_acet1")
+```
+
+## Process data
+### clean data
+```{r}
+source("01_processing/cleandata.R")
+
+df <- cleandata(rawcq)
+```
+### calculate techrep
+```{r}
+source("01_processing/calctecrep.R")
+
+df1 <- calctecrep(df)
+```
+### Pull actin (housekeeping gene)
+```{r}
+source("01_processing/pullhkg.R")
+
+df_hkg <- pullhkg(df1, "SlActin")
+```
+### calculate delta Ct
+```{r}
+source("01_processing/deltact.R")
+
+df2 <- deltact(df1,df_hkg, "SlAcet1")
+```
+
+## Data analysis
+### Statistics
+```{r}
+source("02_analysis/anova2x.R")
+
+anova_treatment <- anova2x(df2)
+```
+
+## Generate figure
+### figure
+```{r}
+source("03_figures/figure.R")
+
+fig1a <- figure(df2,"Sl Acet1a/b (10hpi)")
+```
+### Save figure to file directory
+```{r}
+#source("03_figures/savefig.R")
+#folder<-"E:/Files/PhD Files 2 Iris Mollhoff/Git stuff/qPCR_analysis/experiments/"
+#filename<-"20231207_a14_acet1_6h_anovabonf"
+#fig1a <- figure(fig1a,folder,filename)
+
+#RETURNS: Error in figure(fig1a, folder, filename) : unused argument (filename)
+```
+```{r}
+folder_location<-"E:/Files/PhD Files 2 Iris Mollhoff/Git stuff/qPCR_analysis/experiments/"
+file_name<-"20231208_a14_acet1_10h_anovabonf" 
+##change file name but keep directory the same
+
+path <-paste(folder_location,file_name,".png",sep = "")
+  
+  ggsave(filename = path,
+         device = "png",
+         height = 4, width = 5)
+  path
+```
+
+
