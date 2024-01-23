@@ -62,10 +62,18 @@ key <- loadfile_csv(datafolder,"20221022_a83_samplekey")
 ## Process data
 ### clean data
 ```{r}
-source("01_processing/cleandata.R")
+source("01_processing/cleandata_384.R")
 
-df <- cleandata(rawcq)
+d <- cleandata_384(rawcq)
 ```
+### clean key
+```{r}
+source("01_processing/cleankey.R")
+
+k <- cleankey(key)
+```
+
+
 ### calculate techrep
 ```{r}
 source("01_processing/calctecrep.R")
