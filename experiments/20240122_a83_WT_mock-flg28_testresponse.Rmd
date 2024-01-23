@@ -72,6 +72,10 @@ source("01_processing/cleankey.R")
 
 k <- cleankey(key)
 ```
+###Combine data and key
+```{r}
+df <- right_join(k,d,by = "Sample")
+```
 
 
 ### calculate techrep

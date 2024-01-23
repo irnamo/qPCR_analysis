@@ -4,6 +4,7 @@ library(tidyverse)
 cleankey <- function(keyfile){
   df1 <- key %>% 
     add_row(sample=0) %>% 
-    rename(Sample=sample)
+    rename(Sample=sample) %>% 
+    mutate(across(1:4, factor))
   return(df1)
 }
