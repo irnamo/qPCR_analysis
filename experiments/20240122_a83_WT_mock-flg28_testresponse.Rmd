@@ -77,24 +77,34 @@ k <- cleankey(key)
 df <- right_join(k,d,by = "Sample")
 ```
 
-
 ### calculate techrep
 ```{r}
-source("01_processing/calctecrep.R")
+source("01_processing/calctecrep_384.R")
 
-df1 <- calctecrep(df)
+df1 <- calctecrep_384(df)
 ```
 ### Pull actin (housekeeping gene)
 ```{r}
-source("01_processing/pullhkg.R")
+source("01_processing/pullhkg_384.R")
 
-df_hkg <- pullhkg(df1, "SlActin")
+df_actin <- pullhkg_384(df1, "SlAct")
 ```
+### Pull VIN3 (housekeeping gene)
+```{r}
+source("01_processing/pullhkg_384.R")
+
+df_vin3 <- pullhkg_384(df1, "SlVIN3")
+```
+2024.01.22 - noticed high higher variability (23.5-36.4) in VIN3 compared to actin (17.9-26.9)
+
 ### calculate delta Ct
 ```{r}
-source("01_processing/deltact.R")
+source("01_processing/deltact_384.R")
 
-df2 <- deltact(df1,df_hkg, "SlAcet1")
+list_df2 <- deltact_384(df1,df_actin, "SlFLS3") #returns list of tables (1)is delta cq or delta ct. (2) is the isolated marker gene
+
+#df2_FLS3 <-list_df2[[1]]
+#df1_FLS3 <-list_df2[[2]]
 ```
 
 ## Data analysis
