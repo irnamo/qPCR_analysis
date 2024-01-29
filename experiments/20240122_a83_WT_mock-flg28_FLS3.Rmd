@@ -1,0 +1,272 @@
+---
+title: "bio258_project_INM"
+author: "Iris Mollhoff"
+date: "2023-12-06"
+output: html_document
+---
+
+# **Report** -- 2023.12.07
+This r-markdown contains the code to reproducibly load qPCR data, process, perform statistical analysis, and generate a figure. Instead of copying and pasting multiple messy chunks and replacing called variables, I have much more control in this version to cleanly run the code.
+
+The downsides are that there are less frills. I couldn't figure out how or whether I wanted to show all of the statistical checks that I usually do prior to statistical analysis (e.g. normailty, sphericity, equal variance).
+
+## **Goals**
+1. Check housekeeping genes have low variance. actin vs. VIN3
+done
+2. Determine if FLS3 and WAK1 espression in response to flgII-28 in WT plants is as expected.
+done
+3. Determine optimal time window for future WT vs delta-ACET1 comparison
+done
+
+# **R Code**
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## Clear global enviornment
+```{r}
+rm(list = ls())
+```
+##Load required packages
+```{r}
+library(pcr)
+library(tidyverse)
+library(ggpubr)
+library(readxl)
+library(scales)
+library(ggtext)
+library(multcomp)
+library(lsmeans)
+library(rcompanion)
+library(viridis)
+library(ggprism)
+library(FSA)
+library(gtools)
+library(gginnards)
+library(multcompView)
+library(ggtext)
+library(scales)
+library(rstatix)
+library(pastecs)
+library(car)
+```
+
+
+## load data
+```{r}
+source("01_processing/loadfile_csv.R")
+
+datafolder <- "E:/Files/PhD Files 2 Iris Mollhoff/Git stuff/qPCR_analysis_flgII28/data/"
+
+rawcq <- loadfile_csv(datafolder,"20240122_a83_WT_actin-vin3-fls3-wak1")
+
+key <- loadfile_csv(datafolder,"20221022_a83_samplekey")
+```
+
+## Process data
+### clean data
+```{r}
+source("01_processing/cleandata_384.R")
+
+d <- cleandata_384(rawcq)
+```
+### clean key
+```{r}
+source("01_processing/cleankey.R")
+
+k <- cleankey(key)
+```
+###Combine data and key
+```{r}
+df <- right_join(k,d,by = "Sample")
+```
+
+### calculate techrep
+```{r}
+source("01_processing/calctecrep_384.R")
+
+df1 <- calctecrep_384(df)
+```
+### Pull actin (housekeeping gene)
+```{r}
+source("01_processing/pullhkg_384.R")
+
+df_actin <- pullhkg_384(df1, "SlAct")
+```
+### Pull VIN3 (housekeeping gene)
+```{r}
+source("01_processing/pullhkg_384.R")
+
+df_vin3 <- pullhkg_384(df1, "SlVIN3")
+```
+2024.01.22 - noticed high higher variability (23.5-36.4) in VIN3 compared to actin (17.9-26.9)
+
+### calculate delta Ct
+```{r}
+source("01_processing/deltact_384.R")
+
+list_df2 <- deltact_384(df1,df_actin, "SlFLS3", c("Sample","genotype","treatment", "time"))
+#returns list of tables (1)is delta cq or delta ct. (2) is the isolated marker gene
+
+df2_FLS3 <-list_df2[[1]] #the delta-ct table
+df1_FLS3 <-list_df2[[2]] #the ct table for the marker of interest
+```
+
+## Data analysis
+### Statistics
+```{r}
+#source("02_analysis/anova2x.R")
+#anova_treatment <- anova2x(df2)
+```
+
+```{r}
+df2_FLS3 %>%
+  get_summary_stats(d_cq, type = "mean_sd")
+```
+```{r}
+bxp <- ggboxplot(
+  df2_FLS3, x = "treatment", y = "d_cq", # I just realized that its all one genotype.... duh
+  color = "time", palette = "jco",
+  facet.by = "genotype", short.panel.labs = FALSE
+  )
+bxp
+```
+```{r}
+  #trim unused variables
+  df_trim<- df2_FLS3 %>% 
+    dplyr::select(!c(Target.x:hkg_cq)) %>% 
+    ungroup() %>%
+    dplyr::select(!genotype) %>% 
+    relocate(Sample) %>% 
+    na.omit()
+```
+```{r}
+#test 2-way anova
+  res.aov <- anova_test(d_cq ~ time*treatment,data = df_trim, 
+                        dv = d_cq, wid = Sample,
+                        within = c(time:treatment))
+ res.aov
+```
+```{r}
+#test one way anova between genotypes
+  one.way <- df_trim %>%
+    group_by(treatment) %>%
+    anova_test(d_cq ~ time ,dv = d_cq, within = time) %>%
+    get_anova_table() %>%
+    adjust_pvalue(method = "bonferroni")
+one.way
+```
+
+```{r}
+#test one way anova between genotypes
+  one.way2 <- df_trim %>%
+    group_by(time) %>%
+    anova_test(d_cq ~ treatment ,dv = d_cq, within = treatment) %>%
+    get_anova_table() %>%
+    adjust_pvalue(method = "bonferroni")
+one.way2
+```
+```{r}
+#set up variable for automatically setting height of p-value bars
+  p.val.ht <- max(2^(-1*(df_trim$d_cq)))
+```
+
+
+```{r}
+#calculate pairwise comparison by t-test with bonferroni correction
+  pairwise_comp <- df_trim %>%
+    group_by(treatment) %>%
+    pairwise_t_test(
+      d_cq ~ time, paired = TRUE,
+      p.adjust.method = "bonferroni") %>%
+    mutate(y.position = 1.1*p.val.ht)
+pairwise_comp
+```
+```{r}
+#calculate pairwise comparison by t-test with bonferroni correction
+  pairwise_comp2 <- df_trim %>%
+    group_by(time) %>%
+    pairwise_t_test(
+      d_cq ~ treatment, paired = TRUE,
+      p.adjust.method = "bonferroni") %>%
+    mutate(y.position = 1.1*p.val.ht)
+pairwise_comp2
+```
+
+## Generate figure 1
+```{r}
+# Specify the comparisons for p-value
+#  my_comparisons <- list( c("0","3","6","9","12")) 
+  # facet label names
+#  treat.labs <- c("flgII-28","mock")
+#  names(treat.labs) <- anova_treatment$treatment
+```
+```{r}
+###calculate average delta-Ct and 2^delta CT
+  df_logdcq <- df_trim %>% 
+    dplyr::group_by(time,treatment) %>% 
+    mutate(log_d_cq = 2^(-1*(d_cq)))
+```
+```{r}
+fig_1 <- ggboxplot(df_logdcq,x = "time",y = "log_d_cq",
+                   order = (c("0","3","6","9","24")),
+                   fill = "treatment", palette = "jco") +
+  ylim(0,1) + ylab("Relative transcript abundance") +
+  ggtitle("FLS3") + theme(plot.title = element_text(hjust = 0.5))
+
+fig_1
+```
+### Save figure to file directory
+```{r}
+#source("03_figures/savefig.R")
+#folder<-"E:/Files/PhD Files 2 Iris Mollhoff/Git stuff/qPCR_analysis_flgII28/experiments/"
+#filename<-"20240123_a83_WT_FLS3"
+#fig1a <- figure(fig1a,folder,filename)
+
+#RETURNS: Error in figure(fig1a, folder, filename) : unused argument (filename)
+```
+```{r}
+folder_location<-"E:/Files/PhD Files 2 Iris Mollhoff/Git stuff/qPCR_analysis_flgII28/experiments/"
+file_name<-"20240123_a83_WT_FLS3_treatment" 
+##change file name but keep directory the same
+
+path <-paste(folder_location,file_name,".png",sep = "")
+  
+  ggsave(filename = path,
+         device = "png",
+         height = 4, width = 5)
+  path
+```
+## Generate figure 2
+```{r}
+fig_2 <- ggboxplot(df_logdcq,x = "treatment",y = "log_d_cq",
+                   order = (c("flgII-28","mock")),
+                   fill = "time", palette = "jco") +
+  ylim(0,1) + ylab("Relative transcript abundance") +
+  ggtitle("FLS3") + theme(plot.title = element_text(hjust = 0.5))
+
+fig_2
+```
+
+### Save figure to file directory
+```{r}
+#source("03_figures/savefig.R")
+#folder<-"E:/Files/PhD Files 2 Iris Mollhoff/Git stuff/qPCR_analysis_flgII28/experiments/"
+#filename<-"20240123_a83_WT_FLS3"
+#fig1a <- figure(fig1a,folder,filename)
+
+#RETURNS: Error in figure(fig1a, folder, filename) : unused argument (filename)
+```
+```{r}
+folder_location<-"E:/Files/PhD Files 2 Iris Mollhoff/Git stuff/qPCR_analysis_flgII28/experiments/"
+file_name<-"20240123_a83_WT_FLS3_time" 
+##change file name but keep directory the same
+
+path <-paste(folder_location,file_name,".png",sep = "")
+  
+  ggsave(filename = path,
+         device = "png",
+         height = 4, width = 5)
+  path
+```
+
+

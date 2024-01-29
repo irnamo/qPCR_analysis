@@ -1,0 +1,62 @@
+---
+title: "Untitled"
+author: "Iris Mollhoff"
+date: "2024-01-29"
+output: html_document
+---
+
+# **Report** -- 2024.01.29
+This r-markdown contains the code to reproducibly load qPCR data, process, perform statistical analysis, and generate figures. 
+Raw data is sourced from the data directory. Functions are sourced from the 01_processing folder in the experiments directory.Final figures are saved ast .png files in the experiments directory.
+
+## **Goals**
+1. Check housekeeping genes have low variance. actin vs. VIN3
+done
+2. Determine if FLS3 and WAK1 espression in response to flgII-28 in WT plants is as expected.
+done
+3. Determine optimal time window for future WT vs delta-ACET1 comparison
+done
+
+# **R Code**
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## Clear global enviornment
+```{r}
+rm(list = ls())
+```
+##Load required packages
+```{r}
+library(pcr)
+library(tidyverse)
+library(ggpubr)
+library(readxl)
+library(scales)
+library(ggtext)
+library(multcomp)
+library(lsmeans)
+library(rcompanion)
+library(viridis)
+library(ggprism)
+library(FSA)
+library(gtools)
+library(gginnards)
+library(multcompView)
+library(ggtext)
+library(scales)
+library(rstatix)
+library(pastecs)
+library(car)
+```
+
+## load data
+```{r}
+source("01_processing/loadfile_csv.R")
+
+datafolder <- "E:/Files/PhD Files 2 Iris Mollhoff/Git stuff/qPCR_analysis_flgII28/data/"
+
+rawcq_a <- loadfile_csv(datafolder,"20240125_a83_ACET1_actin-FLS3-WAK1")
+rawcq_w <- loadfile_csv(datafolder,"20240122_a83_WT_actin-vin3-fls3-wak1")
+                      
+key <- loadfile_csv(datafolder,"20221022_a83_samplekey")
+```
