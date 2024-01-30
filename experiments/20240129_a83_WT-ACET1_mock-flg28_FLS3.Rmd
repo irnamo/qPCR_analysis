@@ -101,11 +101,11 @@ source("01_processing/pullhkg_384.R")
 df_actin <- pullhkg_384(df1, "SlAct")
 ```
 
-### calculate delta Ct and log delta ct--- for SlWAK1
+### calculate delta Ct and log delta ct--- for SlFLS3
 ```{r}
 source("01_processing/deltact_384.R")
 
-list_df2 <- deltact_384(df1,df_actin, "SlWAK1", c("Sample","genotype","treatment", "time", "rep"))
+list_df2 <- deltact_384(df1,df_actin, "SlFLS3", c("Sample","genotype","treatment", "time", "rep"))
 #returns list of tables (1)is delta cq or delta ct. (2) is the isolated marker gene
 
 df1_marker <-list_df2[[2]] #the ct table for the marker of interest
@@ -165,7 +165,7 @@ df4_marker %>%
   group_by(genotype, treatment, time) %>%
   shapiro_test(log_d_cq)
 ```
-**2024.01.09 result** - samples that break normality assumption: ACET1-mock-24
+**2024.01.09 result** - samples that break normality assumption: WT-flg28-3h, ACET1-flg28-0h, ACET1-flg28-9h
 
 ###check qq-plot
 ```{r}
@@ -181,7 +181,7 @@ res.aov <- anova_test(data = df4_marker,
                         within = c(genotype, treatment, time))
  res.aov
 ```
-**RESULT 2024.01.29** found 2-way effect by time and treatment. no 3-way effect between the three variables was found
+**RESULT 2024.01.29** found No 2-way effect. no 3-way effect. only sigle effect by genotype and time
 
 ```{r}
 #test 3-way anova on antilog-transformed delta ct
@@ -190,7 +190,7 @@ res.aov.2 <- anova_test(data = df4_marker,
                         within = c(genotype, treatment, time))
  res.aov.2
 ```
-**RESULT 2024.01.29** single effect by genotype or time, found 2-way effect by time and treatment, genotype and time. 3-way effect between the three variables was found
+**RESULT 2024.01.29** No single effect, no 2-way effect, and no 3-way effect was found
 
 ###Test simple 2-way interaction
 ```{r, eval=FALSE}
@@ -214,7 +214,7 @@ two.way2 <- df_trim %>%
   anova_test(dv = d_cq, wid = rep, within = c(time, treatment))
 two.way2
 ```
-**RESULT 2024.01.29** did NOT find a simple 2-way interaction by genotype and treatment at any time. Did find  genotype effect at 6h. Did find treatment effect at 6h and 9h
+**RESULT 2024.01.29** did NOT find a simple 2-way interaction by genotype and treatment at any time.
 
 ```{r}
 # Two-way ANOVA at each time using antilog-transformed data
@@ -223,7 +223,7 @@ two.way1.1 <- df4_marker %>%
   anova_test(dv = log_d_cq, wid = rep, within = c(genotype, treatment))
 two.way1.1
 ```
-**RESULT 2024.01.29** find a simple 2-way interaction by genotype and treatment at 3h. Did find  genotype effect at 3h, 6h. Did find treatment effect at 6h and 9h
+**RESULT 2024.01.29** did not find a simple 2-way interaction by genotype and treatment 
 
 ###Compute simple main effect
 ```{r, eval=FALSE}
@@ -240,7 +240,17 @@ gen.effect <- df4_marker %>%
   anova_test(dv = d_cq, wid = rep, within = genotype )
 gen.effect
 ```
-**RESULT 2024.01.29** significant for mock-3h and mock-6h... using either delta ct or log delta ct
+**RESULT 2024.01.29** significant genotype effect only found with delta ct values (not log delta ct)
+flg28-6h, mock-3h, mock-9h
+
+```{r}
+# Effect of genotype at each treatment X genotype cells
+time.effect <- df4_marker %>%
+  group_by(  treatment, genotype) %>%
+  anova_test(dv = d_cq, wid = rep, within = time)
+time.effect
+```
+**RESULT 2024.01.29** no time effect using delta ct values or log delta ct values
 
 ```{r}
 # Effect of genotype at each treatment X time cells
@@ -249,9 +259,7 @@ trt.effect <- df4_marker %>%
   anova_test(dv = d_cq, wid = rep, within = treatment)
 trt.effect
 ```
-**RESULT 2024.01.29** significant for WT-6h and ACET1-6h using ewither delta ct or log delta ct 
-ACET1-3h significant using log delta ct
-ACET1-3h significant using delta ct
+**RESULT 2024.01.29** no treatment effect
 
 ```{r}
 #set up variable for automatically setting height of p-value bars
@@ -264,41 +272,31 @@ ACET1-3h significant using delta ct
   pwc1 <- df4_marker %>%
     group_by(treatment,time) %>%
     pairwise_t_test(
-      d_cq ~ genotype, paired = TRUE,
+      log_d_cq ~ genotype, paired = TRUE,
       p.adjust.method = "bonferroni") %>%
     mutate(y.position = 1.1*p.val.ht)
 pwc1
 ```
-**RESULT 2024.01.29** significant for both delta ct and log delta ct data. mock-3/6hr conditions are significantly different between genotypes
+**RESULT 2024.01.29**  not significant for log delta ct data
 
 ```{r}
-#calculate pairwise comparison for treatment effect by t-test with bonferroni correction
+#calculate pairwise comparison for genotype effect by t-test with bonferroni correction
   pwc2 <- df4_marker %>%
-    group_by(genotype,time) %>%
+    group_by(treatment,time) %>%
     pairwise_t_test(
-      d_cq ~ treatment, paired = TRUE,
+      d_cq ~ genotype, paired = TRUE,
       p.adjust.method = "bonferroni") %>%
-    mutate(y.position = 1.1*p.val.ht)
+    mutate(y.position = .25*p.val.ht)
 pwc2
 ```
-```{r}
-#calculate pairwise comparison by t-test with bonferroni correction
-  pwc2.1 <- df4_marker %>%
-    group_by(genotype,time) %>%
-    pairwise_t_test(
-      log_d_cq ~ treatment, paired = TRUE,
-      p.adjust.method = "bonferroni") %>%
-    mutate(y.position = 1.1*p.val.ht)
-pwc2.1
-```
-**RESULT 2024.01.29** significant for WT-6h and ACET1-6h using either delta ct or log delta ct 
-ACET1-3h significant using delta ct
-ACET1-3h significant using log delta ct
+
+**RESULT 2024.01.29** significant genotype effect only found with delta ct values:
+flg28-6h, mock-3h, mock-9h
 
 
 
-## Generate figure
-##Test the Figure on delta-cq
+## Generate figures
+###base Figure on log delta-cq compare by genotype
 ```{r}
 bxp1 <- ggboxplot(
   df4_marker, x = "time", y = "log_d_cq", 
@@ -308,55 +306,66 @@ bxp1 <- ggboxplot(
   )
 bxp1
 ```
-
-
+####p-value modification on figure for genotype effect from log delta cq
 ```{r}
 # Visualization: box plots with p-values
 pwc1 <- pwc1 %>% add_xy_position(x = "time")
 pwc1.filtered <- pwc1 %>% 
-  filter(treatment == "mock", time == "3"|time == "6")
+  filter(time == "3"|time == "6"|time == "9")
+
 bxp1 + 
-  stat_pvalue_manual(pwc1.filtered, tip.length = 0, hide.ns = TRUE) +
+  stat_pvalue_manual(pwc1.filtered, tip.length = 0) +
   labs(
-    subtitle = get_test_label(res.aov, detailed = TRUE),
-    caption = get_pwc_label(pwc1)
+    title = "Sl FLS",
+    subtitle = get_test_label(res.aov.2, detailed = TRUE),
+    caption = get_pwc_label(pwc1),
+    x="Time (hrs)", y= "Relative Transcript Abundance / Sl Actin"
   )
 ```
-
-##Test the Figure on 2^delta-cq
+#### Save figure 1 to file directory
 ```{r}
-###calculate average delta-Ct and 2^delta CT
-  df_logdcq <- df_trim %>% 
-    dplyr::group_by(genotype,time,treatment) %>% 
-    mutate(log_d_cq = 2^(-1*(d_cq)))
+folder_location<-"E:/Files/PhD Files 2 Iris Mollhoff/Git stuff/qPCR_analysis_flgII28/experiments/"
+file_name<-"20240129_a83_WT-ACET1_FLS3_genotype_y40_logdcq" 
+##change file name but keep directory the same
+
+path <-paste(folder_location,file_name,".png",sep = "")
+  
+  ggsave(filename = path,
+         device = "png",
+         height = 5, width = 5)
+  path
 ```
 
-```{r}
-bxp2 <- ggboxplot(
-  df_logdcq, x = "time", y = "d_cq", 
-  color = "genotype", palette = "jco",
-  facet.by = "treatment", short.panel.labs = FALSE,
-  add = "point"
-  )
-bxp2
-```
+####p-value modification on figure for genotype effect from  delta cq
 ```{r}
 # Visualization: box plots with p-values
-pwc1 <- pwc1 %>% add_xy_position(x = "time")
-pwc1.filtered <- pwc1 %>% 
-  filter(treatment == "mock", time == "3"|time == "6")
+pwc2 <- pwc2 %>% add_x_position(x = "time") #used to by add_xy_position
+pwc2.filtered <- pwc2 %>% 
+  filter(time == "3"|time == "6"|time == "9")
+
 bxp1 + 
-  stat_pvalue_manual(pwc1.filtered, tip.length = 0, hide.ns = TRUE) +
+  stat_pvalue_manual(pwc2, label="p.adj", tip.length = 0,bracket.shorten = 1.01 ) +
   labs(
+    title = "Sl FLS",
     subtitle = get_test_label(res.aov, detailed = TRUE),
-    caption = get_pwc_label(pwc1)
-  )
+    caption = get_pwc_label(pwc1),
+    x="Time (hrs)", y= "Relative Transcript Abundance / Sl Actin") +
+  ylim(0,10)
 ```
 
+#### Save figure 2 to file directory
+```{r}
+folder_location<-"E:/Files/PhD Files 2 Iris Mollhoff/Git stuff/qPCR_analysis_flgII28/experiments/"
+file_name<-"20240129_a83_WT-ACET1_FLS3_genotype_y10_dcq" 
+##change file name but keep directory the same
 
-
-
-
+path <-paste(folder_location,file_name,".png",sep = "")
+  
+  ggsave(filename = path,
+         device = "png",
+         height = 5, width = 5)
+  path
+```
 
 
 
